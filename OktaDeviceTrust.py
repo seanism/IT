@@ -24,8 +24,8 @@ from OpenSSL import crypto
 
 #####################################################################
 # Org Configuration: Configure you organization URL and Token
-ORG_TOKEN = 'wJsvzz3eqMpwYyI4coQ9Z3Zi3XruwJv9rJnGzJPpHQ0'
-URL = 'https://quizlet.okta.com'
+ORG_TOKEN = '<<TOKEN>>'
+URL = 'https://<<ORG>>.okta.com'
 #####################################################################
 
 #####################################################################
