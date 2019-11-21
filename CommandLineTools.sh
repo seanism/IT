@@ -9,8 +9,8 @@ echo -e "--- Commandline Tools ---\n" | tee $LOG_FILE
 os=$(sw_vers -productVersion | awk -F. '{print $1 "." $2}')
 
 # string comparison
-if [[ "$os_ver" == 10.15 ]]; then
-	echo "macOS Catalina"
+if [[ "$os" == 10.15 ]]; then
+	echo "macOS Catalina detected"
     if softwareupdate --history | grep --silent "Command Line Tools.*"; then
 		echo 'Command-line tools already installed.'
 	else
@@ -18,13 +18,13 @@ if [[ "$os_ver" == 10.15 ]]; then
 		echo '##### Installing Command-line tools...'
     	in_progress=/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
     	touch ${in_progress}
-    	product=$(softwareupdate -l | grep -B 1 -E 'Command Line Tools' | awk -F'*' '/^ *\\*/ {print $2}' | sed -e 's/^ *Label: //' -e 's/^ *//' | sort -V | tail -n1 | print)
+    	product=$(softwareupdate -l | grep -B 1 -E 'Command Line Tools' | awk -F'*' '/^ *\\*/ {print $2}' | sed -e 's/^ *Label: //' -e 's/^ *//' | sort -V | tail -n1)
     	softwareupdate --verbose --install "${product}" || echo 'Installation failed.' 1>&2 && rm ${in_progress} && echo 'Command-line tools installed.'
 	fi    
     
     
-elif [[ "$os_ver" == 10.14 ]]; then
-	echo "macOS High Sierra"
+elif [[ "$os" == 10.14 ]]; then
+	echo "macOS Mojave"
     if softwareupdate --history | grep --silent "Command Line Tools.*${os}"; then
 		echo 'Command-line tools already installed.'
 	else
@@ -36,7 +36,7 @@ elif [[ "$os_ver" == 10.14 ]]; then
     	softwareupdate --verbose --install "${product}" || echo 'Installation failed.' 1>&2 && rm ${in_progress} && echo 'Command-line tools installed.'
 	fi
 else
-	echo "Mac OS X 10.13 or earlier"
+	echo "MacOS 10.13 or earlier.  You should upgrade."
     if softwareupdate --history | grep --silent "Command Line Tools.*${os}"; then
 		echo 'Command-line tools already installed.'
 	else
