@@ -14,7 +14,7 @@ if [[ $response =~ [nN] ]]
 fi
 
 # Confirm user name before deprovisioning
-read -r -p "Do you want to deprovision $username? [y/n]: " response
+read -r -p "Ready to deprovision $username? [y/n]: " response
 if [[ $response =~ [nN] ]]
   then
 		echo "Exiting"
@@ -22,7 +22,7 @@ if [[ $response =~ [nN] ]]
 fi
 
 # Verifying account is not suspended
-echo "-> Unspending user account"
+echo "-> Unsuspending user account"
 $gam update user $username suspended off
 
 # Should user's calendar be wiped? If so, it will be wiped later
@@ -123,7 +123,7 @@ month=$(LANG=en_us_88591; date "+%B");
 
 # Moving user to offboarding OU
 echo "-> Moving $username to the Offboarding OU"
-$gam update org /Offboarding/$month add users $username
+$gam update user $username org /Offboarding/$month
 
 # hiding user from directory
 echo "-> Hiding $username from the GAL"
