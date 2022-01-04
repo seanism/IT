@@ -66,6 +66,16 @@ unset IFS
 			$gam update mobile $mobileid action account_wipe && echo "Removing $mobileid from $username"
 	done | tee -a /Users/Shared/$username.log
 
+# Removing all devices connected
+echo "-> Gathering all devices for $username"
+IFS=$'\n'
+all_devices=($($gam print devices query "email:$username" | grep -v name | awk -F"," '{print $1}'))
+unset IFS
+	for deviceid in ${all_devices[@]}
+		do
+			$gam update mobile $mobileid action account_wipe && echo "Removing $mobileid from $username"
+	done | tee -a /Users/Shared/$username.log
+
 # Changing user's password to random
 echo "-> Changing "$username"'s' password to something random"
 $gam update user $username password random | tee -a /Users/Shared/$username.log
@@ -106,11 +116,11 @@ fi
 ## Out of office
 if [[ $ooo =~ [yY] ]]
 then
-		echo "The message will say: Thank you for contacting me. I am no longer working at Quizlet. Please direct any future correspondence to <<EMPLOYEE>>."
+		echo "The message will say: Thank you for contacting me. I am no longer working at Diem. Please direct any future correspondence to <<EMPLOYEE>>."
 		echo "What email should be listed in the above message? "
 		read ooo_employee
 		echo "Setting "$username"'s OOO"
-		$gam user $username  vacation on subject "No longer at Quizlet" message "Thank you for contacting me. I am no longer working at Quizlet. Please direct any future correspondence to "$ooo_employee". Thank you."| tee -a /Users/Shared/$username.log
+		$gam user $username  vacation on subject "No longer at Quizlet" message "Thank you for contacting me. I am no longer working at Diem. Please direct any future correspondence to "$ooo_employee". Thank you."| tee -a /Users/Shared/$username.log
 else
 		echo "Not setting OOO" | tee -a /Users/Shared/$username.log
 fi
