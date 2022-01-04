@@ -5,7 +5,7 @@
 # Ensure you are an org admin
 # Create a personal access token in Github with the permissions admin:org
 # https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token
-# This file reads from a CSV file with NO header that lists all the users you want to remove
+# This script reads from a CSV file ($INPUT) which should list each user you want to remove
 # ------------------------------------------
 INPUT=data.csv
 OLDIFS=$IFS
