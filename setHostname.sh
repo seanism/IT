@@ -1,11 +1,14 @@
 #!/bin/sh
 
 # Sets computer name to XX-First-LAST with the XX being the country code
+# Assumes username is firstName lastName
 # created by Sean Young 2021-10-20
 
 # Gets the country code
 location_raw=$(whois $(curl ifconfig.me) | grep -iE ^country: | awk '{print toupper($2)}')
-if [ "$location_raw" == "GB" ]; then
+
+location_short="${location_raw:0:2}"
+if [ "$location_short" == "GB" ]; then
 	location="UK"
 else
 	location=$location_raw
