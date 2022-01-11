@@ -11,7 +11,7 @@ location_short="${location_raw:0:2}"
 if [ "$location_short" == "GB" ]; then
 	location="UK"
 else
-	location=$location_raw
+	location=$location_short
 fi
 
 # Gets current logged in user
