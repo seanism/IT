@@ -9,6 +9,12 @@
 # ------------------------------------------
 INPUT=data.csv
 OLDIFS=$IFS
+COUNTER=0
+
+# Defined variables
+gituser=""
+token=""
+###################
 IFS=','
 [ ! -f $INPUT ] && { echo "$INPUT file not found"; exit 99; }
 
@@ -16,18 +22,29 @@ NOW=$(date +"%c")
 echo "Script runtime: $NOW" >> github.log
 
 accept="Accept: application/vnd.github.v3+json"
-gituser=""
-token=""
+token="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"
 while read username
 do
+	echo "Checking $username..."
 	url="https://api.github.com/orgs/diem/members/${username}"
 	curl -X DELETE $url -u "$gituser:$token" -H "Accept: application/vnd.github.v3+json" &> /dev/null
 	if [ 200 -eq $? ]; then
-		echo "Removed: $username" >> github.log
+		echo "  Removed: $username" >> github.log
+		let COUNTER++
 	else
-		echo "$username wasn't a member."
+		echo "  $username isn't a member"
+		url_collab="https://api.github.com/orgs/diem/outside_collaborators/${username}"
+		curl -X DELETE $url_collab -u "$gituser:$token" -H "Accept: application/vnd.github.v3+json"
+		if [ 204 -eq $? ]; then
+			echo "  Removed outside collaborator: $username" >> github.log
+			let COUNTER++
+		else
+			echo "  $username isn't an outside collaborator"
+		fi
 	fi
-
+echo ""
 done < $INPUT
 IFS=$OLDIFS
+echo "Total Removed: $COUNTER"
+echo "Total Removed: $COUNTER" >> github.log
 echo "------------------------" >> github.log
