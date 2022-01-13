@@ -14,6 +14,7 @@ COUNTER=0
 # Defined variables
 gituser=""
 token=""
+accept="Accept: application/vnd.github.v3+json"
 ###################
 IFS=','
 [ ! -f $INPUT ] && { echo "$INPUT file not found"; exit 99; }
@@ -21,8 +22,6 @@ IFS=','
 NOW=$(date +"%c")
 echo "Script runtime: $NOW" >> github.log
 
-accept="Accept: application/vnd.github.v3+json"
-token="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"
 while read username
 do
 	echo "Checking $username..."
