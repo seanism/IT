@@ -1,34 +1,69 @@
 #!/bin/sh
 
 # Sets computer name to XX-First-LAST with the XX being the country code
-# Assumes username is firstName lastName
+# pulls their name from JAMF real name field.
+# Define fields 4,5,6 under Options in JAMF
+
+# Parameter 4: JAMF Username
+# Parameter 5: JAMF Password
+# Parameter 6: JAMF URL
+
 # created by Sean Young 2021-10-20
 
-# Gets the country code
-location_raw=$(whois $(curl ifconfig.me) | grep -iE ^country: | awk '{print toupper($2)}')
+# Variables
+jssUser=$4
+jssPass=$5
+jssHost=$6
 
-location_short="${location_raw:0:2}"
-if [ "$location_short" == "GB" ]; then
-	location="UK"
+serial=$(ioreg -rd1 -c IOPlatformExpertDevice | awk -F'"' '/IOPlatformSerialNumber/{print $4}')
+
+echo "\n"
+
+response=$(/usr/bin/curl -H -s "Accept: text/xml" -sfku "${jssUser}:${jssPass}" "${jssHost}/JSSResource/computers/serialnumber/${serial}/subset/location")
+if [ $? -eq 0 ]; then
+    echo "-> Successfully connected to JAMF"
 else
-	location=$location_short
+    echo "Error: failed to connect to JAMF"
+    exit 1
 fi
 
-# Gets current logged in user
-getUser=$(ls -l /dev/console | awk '{ print $3 }')
+realName=$(echo $response | /usr/bin/awk -F'<real_name>|</real_name>' '{print $2}');
 
-# Gets first and last name
-firstName=$(finger -s $getUser | head -2 | tail -n 1 | awk '{print tolower($2)}')
-lastName=$(finger -s $getUser | head -2 | tail -n 1 | awk '{print toupper($3)}')
+if [ "$realName" == "" ]; then
+    echo "Error: Name field is blank"
+    exit 1
+fi
+
+echo "-> Retrieved name $realName"
+
+# Converts to camel case and lowercases first name and uppercases lastname.  Includes second last name with the $3 variable below (eg Jason De Lopez)
+camelName=$(sed -r 's/\<./\U&/g'<<< $realName)
+firstName=$(echo $realName | awk '{print tolower($1)}')
+lastName=$(echo $realName | awk '{print toupper($2$3)}')
+#name=$(sed "s/ //g" <<< $camelName)
+
+
+# Gets the country code
+locationRaw=$(whois $(curl -s ifconfig.me) | grep -iE ^country: | awk '{print toupper($2)}')
+
+locationShort="${locationRaw:0:2}"
+if [ "$locationShort" == "GB" ]; then
+	location="UK"
+else
+	location=$locationShort
+fi
+
 
 deviceName="$location-$firstName-$lastName"
+echo "-> Setting computer name to $deviceName"
+
 
 # Sets computer name in JAMF
-/usr/local/bin/jamf setcomputername -name "$deviceName"
+/usr/local/bin/jamf setcomputername -name "$deviceName" > /dev/null 2>&1
 if [ $? -eq 0 ]; then
-    echo "JAMF computername updated!"
+    echo "-> JAMF updated to $deviceName"
 else
-    echo "JAMF computername failed."
+    echo "Error: JAMF computername failed."
 fi
 # Sets computer name for bonjour aware services on the local network
 scutil --set LocalHostName "$deviceName"
@@ -39,9 +74,9 @@ scutil --set HostName "$deviceName"
 # Sets the user friendly computer name
 scutil --set ComputerName "$deviceName"
 if [ $? -eq 0 ]; then
-    echo "Computer name updated!"
+    echo "-> Computer name updated to $deviceName"
 else
-    echo "Computer name failed."
+    echo "Error: Computer name failed."
 fi
 
-/usr/local/bin/jamf recon
+/usr/local/bin/jamf recon > /dev/null 2>&1
