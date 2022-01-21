@@ -3,7 +3,7 @@
 
 gam="$HOME/bin/gam/gam"
 
-# Define your domain
+# Define your company name for OOO
 $company="Diem"
 
 echo ""
