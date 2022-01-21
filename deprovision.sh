@@ -3,6 +3,9 @@
 
 gam="$HOME/bin/gam/gam"
 
+# Define your domain
+$company="Diem"
+
 echo ""
 # Enter user to deprovision
 read  -p "Enter the email address you wish to deprovision: " username
@@ -88,6 +91,10 @@ $gam user $username deprovision | tee -a /Users/Shared/$username.log
 # Removing user from all Groups
 $gam user $username delete group
 
+# Removing recovery email and phone
+echo "-> Removing recovery email and phone"
+$gam update user $username recoveryemail "" recoveryphone ""
+
 # Forcing change password on next sign-in and then disabling immediately.
 # Speculation that this will sign user out within 5 minutes and not allow
 # user to send messages without reauthentication
@@ -116,11 +123,11 @@ fi
 ## Out of office
 if [[ $ooo =~ [yY] ]]
 then
-		echo "The message will say: Thank you for contacting me. I am no longer working at Diem. Please direct any future correspondence to <<EMPLOYEE>>."
+		echo "The message will say: Thank you for contacting me. I am no longer working at $company. Please direct any future correspondence to <<EMPLOYEE>>."
 		echo "What email should be listed in the above message? "
 		read ooo_employee
 		echo "Setting "$username"'s OOO"
-		$gam user $username  vacation on subject "No longer at Quizlet" message "Thank you for contacting me. I am no longer working at Diem. Please direct any future correspondence to "$ooo_employee". Thank you."| tee -a /Users/Shared/$username.log
+		$gam user $username  vacation on subject "No longer at Quizlet" message "Thank you for contacting me. I am no longer working at $company. Please direct any future correspondence to "$ooo_employee". Thank you."| tee -a /Users/Shared/$username.log
 else
 		echo "Not setting OOO" | tee -a /Users/Shared/$username.log
 fi
