@@ -1,5 +1,8 @@
 #!/bin/bash
-#This script performs various offboarding tasks when a user leaves the company.
+# This script performs various offboarding tasks when a user leaves the company.
+# For the standard offboard it will pull their manager from Google Workspace.
+
+# Created by Sean Young (@seanism) 2021
 
 gam="$HOME/bin/gam/gam"
 
