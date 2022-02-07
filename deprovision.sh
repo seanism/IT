@@ -6,8 +6,9 @@
 
 gam="$HOME/bin/gam/gam"
 
-# Define your company name for OOO
+# Define your company name for OOO and offboard OU path in Google
 company="Modal Learning"
+offboardOU="/offboards"
 
 # You'll need an OU in Google Workspace under root called offboards
 
@@ -75,7 +76,7 @@ unset IFS
 	done | tee -a /Users/Shared/$username.log
 
 
- Removing all devices connected
+# Removing all devices connected
 echo "-> Gathering all devices for $username"
 IFS=$'\n'
 all_devices=$($gam print devices query $username | grep -v name | awk -F"," '{print $1}')
@@ -157,7 +158,7 @@ month=$(LANG=en_us_88591; date "+%B");
 
 # Moving user to offboarding OU
 echo "-> Moving $username to the Offboarding OU"
-$gam update user $username org /Offboards/$month
+$gam update user $username org $offboardOU/$month
 
 # hiding user from directory
 echo "-> Hiding $username from the GAL"
