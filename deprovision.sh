@@ -7,7 +7,9 @@
 gam="$HOME/bin/gam/gam"
 
 # Define your company name for OOO
-$company="Diem"
+company="Modal Learning"
+
+# You'll need an OU in Google Workspace under root called offboards
 
 echo ""
 # Enter user to deprovision
@@ -72,14 +74,15 @@ unset IFS
 			$gam update mobile $mobileid action account_wipe && echo "Removing $mobileid from $username"
 	done | tee -a /Users/Shared/$username.log
 
-# Removing all devices connected
+
+ Removing all devices connected
 echo "-> Gathering all devices for $username"
 IFS=$'\n'
-all_devices=($($gam print devices query "email:$username" | grep -v name | awk -F"," '{print $1}'))
+all_devices=$($gam print devices query $username | grep -v name | awk -F"," '{print $1}')
 unset IFS
 	for deviceid in ${all_devices[@]}
 		do
-			$gam update mobile $mobileid action account_wipe && echo "Removing $mobileid from $username"
+			$gam delete device id $deviceid && echo "Removing $deviceid from $username"
 	done | tee -a /Users/Shared/$username.log
 
 # Changing user's password to random
@@ -154,7 +157,7 @@ month=$(LANG=en_us_88591; date "+%B");
 
 # Moving user to offboarding OU
 echo "-> Moving $username to the Offboarding OU"
-$gam update user $username org /Offboarding/$month
+$gam update user $username org /Offboards/$month
 
 # hiding user from directory
 echo "-> Hiding $username from the GAL"
