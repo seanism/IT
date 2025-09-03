@@ -1,0 +1,44 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+
+    "type": "object",
+    "properties": {
+        "RelaunchNotification": {
+            "type": "number",
+            "title": "Chrome update relaunch behavior",
+            "description": "1 = relaunch is recommended, 2 = relaunch is required",
+            "enum": [1, 2]
+        },
+        "PasswordManagerEnabled": {
+            "type": "boolean",
+            "title": "Chrome Password Manager",
+			"description": "If this setting is enabled, users can have Google Chrome memorize passwords and provide them automatically the next time they log in to a site."
+        },
+        "CloudManagementEnrollmentToken": {
+            "type": "string",
+            "title": "Cloud Enrollment",
+            "description": "Specify your Cloud Management Enrollment Token"
+        },
+        "CloudManagementEnrollmentMandatory": {
+            "type": "boolean",
+            "title": "Enforce cloud enrollment",
+            "description": "Make cloud management enrollment mandatory"
+        },
+		"DefaultBrowserSettingEnabled": {
+			"type": "boolean",
+			"title": "Set Google Chrome as Default Browser",
+			"description": "Set Google Chrome as Default Browser"
+		},
+		"BookmarkBarEnabled": {
+			"type": "boolean",
+			"title": "Bookmark Bar",
+			"description": "If you enable this setting, Google Chrome will show a bookmark bar"
+		},
+		"BrowserSignin": {
+			"type": "number",
+			"title": "Sign-in behavior",
+			"description": "0 = Disable browser sign-in, 1 = Enable browser sign-in, 2 = Force users to sign-in to use the browser",
+			"enum": [0, 1, 2]
+		}
+    }
+}

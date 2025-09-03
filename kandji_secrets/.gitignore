@@ -1,0 +1,2 @@
+#Ignore all CSV files in this directory to avoid committing secrets
+*.csv
