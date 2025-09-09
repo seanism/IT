@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Text Copier Extension",
+  "version": "1.5",
+  "description": "Adds a button to a specific page to copy text.",
+  "permissions": [],
+  "icons": {
+    "16": "images/icon-16.png",
+    "48": "images/icon-48.png",
+    "128": "images/icon-128.png"
+  },
+  "content_scripts": [
+    {
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "matches": [
+        "https://*.okta.com/admin/user/profile/view/*"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [ "images/icon.svg" ],
+      "matches": [ "https://*.okta.com/*" ]
+    }
+  ]
+}
