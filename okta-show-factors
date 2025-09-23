@@ -1,0 +1,18 @@
+// Export users and factors to CSV in parallel.
+// https://gabrielsroka.github.io/console/
+limit = 15 // Try 15, 35, or 75 for the limit, depending on the org. see https://developer.okta.com/docs/reference/rl-additional-limits/#concurrent-rate-limits
+
+url = '/api/v1/users?limit=' + limit
+log('id,login,factors')
+promises = []
+for await (user of getObjects(url)) {
+  promises.push(getFactors(user))
+}
+await Promise.all(promises) // Wait until all calls are finished before downloading CSV.
+downloadCSV(debug.value, 'factors')
+
+async function getFactors(user) {
+  factors = await getJson(`/api/v1/users/${user.id}/factors`)
+  waFactors = factors.filter(f => f.factorType == 'webauthn' && f.profile).map(f => f.profile.authenticatorName)
+  log(toCSV(user.id, user.profile.login, waFactors.join('; ')))
+}
