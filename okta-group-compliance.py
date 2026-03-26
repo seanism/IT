@@ -34,20 +34,20 @@ OKTA_API_TOKEN = os.getenv("OKTA_API_TOKEN")
 
 # Naming convention as a Python regex. Groups whose names do NOT match are flagged.
 #
-# Examples:
-#   Prefix_Name style (APP_Salesforce, DEPT_Engineering):
-#       r"^(APP|DEPT|SEC|IT|ENG|HR)_\S+"
+# The default enforces dot-namespaced groups, e.g.:
+#   org.engineering, app.salesforce, team.devops, role.admin, attr.contractor
 #
-#   Lowercase hyphen style (app-salesforce, dept-engineering):
-#       r"^(app|dept|sec|it|eng|hr)-\S+"
+# Other examples:
+#   Restrict allowed prefixes further:
+#       r"^(org|app|team|role|attr)\.[a-z][a-z0-9._-]+"
 #
-#   Any group starting with an uppercase prefix before an underscore:
-#       r"^[A-Z]+_\S+"
+#   Uppercase prefix with underscore separator:
+#       r"^(APP|DEPT|SEC|IT)_\S+"
 #
 #   Fully custom pattern:
 #       r"^YOUR_PATTERN_HERE"
 #
-NAMING_CONVENTION_REGEX = os.getenv("NAMING_CONVENTION_REGEX", r"^[A-Z]+_\S+")
+NAMING_CONVENTION_REGEX = os.getenv("NAMING_CONVENTION_REGEX", r"^(org|attr|app|team|role)\..+")
 
 ########################################################################################
 
