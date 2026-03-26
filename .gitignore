@@ -1,1 +1,14 @@
 .DS_Store
+*.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# uv
+.python-version
+
+# Script output
+okta_noncompliant_groups_*.csv
