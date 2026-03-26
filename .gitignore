@@ -11,4 +11,4 @@ __pycache__/
 .python-version
 
 # Script output
-okta_noncompliant_groups_*.csv
+okta_noncompliant_*.csv
