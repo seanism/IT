@@ -103,7 +103,9 @@ def check_app_assignments(noncompliant_groups):
     for idx, group in enumerate(noncompliant_groups, 1):
         gid = group["id"]
         gname = group["profile"]["name"]
-        print(f"  Checking apps [{idx}/{total}]: {gname}", end="\r")
+        # Pad/truncate to a fixed width to avoid leftover characters from longer names
+        line = f"  Checking apps [{idx}/{total}]: {gname}"
+        print(f"{line:<120}", end="\r")
         apps = get_group_apps(gid)
         if apps:
             groups_with_apps[gid] = [a["label"] for a in apps]
@@ -149,8 +151,13 @@ def check_group_rules(all_rules, nc_ids):
     return groups_in_rules
 
 
-def write_csv(results, path):
-    fieldnames = ["group_name", "group_id", "app_count", "apps", "rule_count", "rules"]
+def get_member_count(group):
+    """Return the member count from the group's objectClass stats if available."""
+    return group.get("_links", {}).get("users", {}).get("hints", {}).get("allow", None) \
+        or group.get("profile", {}).get("memberCount", None)
+
+
+def write_csv(results, path, fieldnames):
     with open(path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -200,48 +207,79 @@ def main():
     print(f"  Non-compliant groups referenced in rules: {len(groups_in_rules)}\n")
 
     in_use_ids = set(groups_with_apps) | set(groups_in_rules)
-
-    if not in_use_ids:
-        print("No non-compliant groups are currently used in app assignments or group rules.")
-        return
-
-    # Print report
-    sep = "=" * 70
-    print(sep)
-    print(f"NON-COMPLIANT GROUPS IN USE  ({len(in_use_ids)} found)")
-    print(sep)
-
-    rows = []
-    for gid in sorted(in_use_ids, key=lambda x: nc_by_id[x]["profile"]["name"].lower()):
-        group = nc_by_id[gid]
-        name = group["profile"]["name"]
-        apps = groups_with_apps.get(gid, [])
-        rules = groups_in_rules.get(gid, [])
-
-        print(f"\nGroup : {name}")
-        print(f"  ID  : {gid}")
-        if apps:
-            print(f"  Apps ({len(apps)}):")
-            for a in apps:
-                print(f"    - {a}")
-        if rules:
-            print(f"  Rules ({len(rules)}):")
-            for r in rules:
-                print(f"    - {r}")
-
-        rows.append({
-            "group_name": name,
-            "group_id": gid,
-            "app_count": len(apps),
-            "apps": "; ".join(apps),
-            "rule_count": len(rules),
-            "rules": "; ".join(rules),
-        })
+    unused_ids = nc_ids - in_use_ids
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    csv_path = f"okta_noncompliant_groups_{timestamp}.csv"
-    write_csv(rows, csv_path)
-    print(f"\nResults written to {csv_path}")
+
+    # ------------------------------------------------------------------ #
+    # Report 1: Non-compliant groups that ARE in use                       #
+    # ------------------------------------------------------------------ #
+    sep = "=" * 70
+    if in_use_ids:
+        print(sep)
+        print(f"NON-COMPLIANT GROUPS IN USE  ({len(in_use_ids)} found)")
+        print(sep)
+
+        in_use_rows = []
+        for gid in sorted(in_use_ids, key=lambda x: nc_by_id[x]["profile"]["name"].lower()):
+            group = nc_by_id[gid]
+            name = group["profile"]["name"]
+            apps = groups_with_apps.get(gid, [])
+            rules = groups_in_rules.get(gid, [])
+
+            print(f"\nGroup : {name}")
+            print(f"  ID  : {gid}")
+            if apps:
+                print(f"  Apps ({len(apps)}):")
+                for a in apps:
+                    print(f"    - {a}")
+            if rules:
+                print(f"  Rules ({len(rules)}):")
+                for r in rules:
+                    print(f"    - {r}")
+
+            in_use_rows.append({
+                "group_name": name,
+                "group_id": gid,
+                "app_count": len(apps),
+                "apps": "; ".join(apps),
+                "rule_count": len(rules),
+                "rules": "; ".join(rules),
+            })
+
+        csv_path = f"okta_noncompliant_inuse_{timestamp}.csv"
+        write_csv(in_use_rows, csv_path, ["group_name", "group_id", "app_count", "apps", "rule_count", "rules"])
+        print(f"\nIn-use report written to {csv_path}")
+    else:
+        print("No non-compliant groups are currently used in app assignments or group rules.")
+
+    # ------------------------------------------------------------------ #
+    # Report 2: Non-compliant groups with no apps, no rules, 0 members    #
+    # Note: SAML attribute statements and sign-on policies are not checked #
+    # ------------------------------------------------------------------ #
+    if unused_ids:
+        # Filter further to only groups with 0 members
+        empty_unused = [
+            nc_by_id[gid] for gid in unused_ids
+            if nc_by_id[gid].get("profile", {}).get("memberCount", 1) == 0
+        ]
+        empty_unused.sort(key=lambda g: g["profile"]["name"].lower())
+
+        print(f"\n{sep}")
+        print(f"POTENTIALLY UNUSED GROUPS  ({len(empty_unused)} with 0 members, no apps, no rules)")
+        print("NOTE: SAML attribute statements and sign-on policies are not checked.")
+        print(sep)
+
+        unused_rows = []
+        for group in empty_unused:
+            gid = group["id"]
+            name = group["profile"]["name"]
+            print(f"  {name}  ({gid})")
+            unused_rows.append({"group_name": name, "group_id": gid})
+
+        csv_path = f"okta_noncompliant_unused_{timestamp}.csv"
+        write_csv(unused_rows, csv_path, ["group_name", "group_id"])
+        print(f"\nUnused report written to {csv_path}")
 
 
 if __name__ == "__main__":
