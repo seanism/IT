@@ -115,8 +115,8 @@ def check_app_assignments(noncompliant_groups):
 
 def check_group_rules(all_rules, nc_ids):
     """
-    Return a dict of group_id -> [rule_description, ...] for non-compliant groups
-    that appear as rule targets or inside rule condition expressions.
+    Return a dict of group_id -> {"target": [...], "condition": [...]} for non-compliant
+    groups that appear as rule targets or inside rule condition expressions.
     """
     groups_in_rules = {}
     for rule in all_rules:
@@ -131,9 +131,8 @@ def check_group_rules(all_rules, nc_ids):
         )
         for gid in target_ids:
             if gid in nc_ids:
-                groups_in_rules.setdefault(gid, []).append(
-                    f"{rule_name} [target, {rule_status}]"
-                )
+                groups_in_rules.setdefault(gid, {"target": [], "condition": []})
+                groups_in_rules[gid]["target"].append(f"{rule_name} [{rule_status}]")
 
         # Groups referenced inside the rule's condition expression
         # (e.g. isMemberOfGroup("00gXXX") or isMemberOfAnyGroup("00gXXX", ...))
@@ -144,9 +143,8 @@ def check_group_rules(all_rules, nc_ids):
         )
         for gid in nc_ids:
             if gid in expression:
-                groups_in_rules.setdefault(gid, []).append(
-                    f"{rule_name} [condition, {rule_status}]"
-                )
+                groups_in_rules.setdefault(gid, {"target": [], "condition": []})
+                groups_in_rules[gid]["condition"].append(f"{rule_name} [{rule_status}]")
 
     return groups_in_rules
 
@@ -204,7 +202,10 @@ def main():
     all_rules = get_all_group_rules()
     print(f"  Total rules: {len(all_rules)}")
     groups_in_rules = check_group_rules(all_rules, nc_ids)
-    print(f"  Non-compliant groups referenced in rules: {len(groups_in_rules)}\n")
+    groups_as_target = {gid for gid, r in groups_in_rules.items() if r["target"]}
+    groups_as_condition = {gid for gid, r in groups_in_rules.items() if r["condition"]}
+    print(f"  Non-compliant groups as rule target: {len(groups_as_target)}")
+    print(f"  Non-compliant groups as rule condition: {len(groups_as_condition)}\n")
 
     in_use_ids = set(groups_with_apps) | set(groups_in_rules)
     unused_ids = nc_ids - in_use_ids
@@ -225,7 +226,7 @@ def main():
             group = nc_by_id[gid]
             name = group["profile"]["name"]
             apps = groups_with_apps.get(gid, [])
-            rules = groups_in_rules.get(gid, [])
+            rules = groups_in_rules.get(gid, {})
 
             print(f"\nGroup : {name}")
             print(f"  ID  : {gid}")
@@ -233,9 +234,16 @@ def main():
                 print(f"  Apps ({len(apps)}):")
                 for a in apps:
                     print(f"    - {a}")
-            if rules:
-                print(f"  Rules ({len(rules)}):")
-                for r in rules:
+            target_rules = rules.get("target", []) if rules else []
+            condition_rules = rules.get("condition", []) if rules else []
+
+            if target_rules:
+                print(f"  Target of rules ({len(target_rules)}):")
+                for r in target_rules:
+                    print(f"    - {r}")
+            if condition_rules:
+                print(f"  Used in rule conditions ({len(condition_rules)}):")
+                for r in condition_rules:
                     print(f"    - {r}")
 
             in_use_rows.append({
@@ -243,12 +251,14 @@ def main():
                 "group_id": gid,
                 "app_count": len(apps),
                 "apps": "; ".join(apps),
-                "rule_count": len(rules),
-                "rules": "; ".join(rules),
+                "target_rule_count": len(target_rules),
+                "target_rules": "; ".join(target_rules),
+                "condition_rule_count": len(condition_rules),
+                "condition_rules": "; ".join(condition_rules),
             })
 
         csv_path = f"okta_noncompliant_inuse_{timestamp}.csv"
-        write_csv(in_use_rows, csv_path, ["group_name", "group_id", "app_count", "apps", "rule_count", "rules"])
+        write_csv(in_use_rows, csv_path, ["group_name", "group_id", "app_count", "apps", "target_rule_count", "target_rules", "condition_rule_count", "condition_rules"])
         print(f"\nIn-use report written to {csv_path}")
     else:
         print("No non-compliant groups are currently used in app assignments or group rules.")
