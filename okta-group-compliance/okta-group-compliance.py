@@ -268,27 +268,30 @@ def main():
     # Note: SAML attribute statements and sign-on policies are not checked #
     # ------------------------------------------------------------------ #
     if unused_ids:
-        # Filter further to only groups with 0 members
-        empty_unused = [
-            nc_by_id[gid] for gid in unused_ids
-            if nc_by_id[gid].get("profile", {}).get("memberCount", 1) == 0
-        ]
-        empty_unused.sort(key=lambda g: g["profile"]["name"].lower())
+        unused_groups = sorted(
+            [nc_by_id[gid] for gid in unused_ids],
+            key=lambda g: g["profile"]["name"].lower()
+        )
 
         print(f"\n{sep}")
-        print(f"POTENTIALLY UNUSED GROUPS  ({len(empty_unused)} with 0 members, no apps, no rules)")
+        print(f"POTENTIALLY UNUSED GROUPS  ({len(unused_groups)} with no apps, no rules)")
         print("NOTE: SAML attribute statements and sign-on policies are not checked.")
         print(sep)
 
         unused_rows = []
-        for group in empty_unused:
+        for group in unused_groups:
             gid = group["id"]
             name = group["profile"]["name"]
-            print(f"  {name}  ({gid})")
-            unused_rows.append({"group_name": name, "group_id": gid})
+            member_count = group.get("profile", {}).get("memberCount", "unknown")
+            print(f"  {name}  ({gid})  members: {member_count}")
+            unused_rows.append({
+                "group_name": name,
+                "group_id": gid,
+                "member_count": member_count,
+            })
 
         csv_path = f"okta_noncompliant_unused_{timestamp}.csv"
-        write_csv(unused_rows, csv_path, ["group_name", "group_id"])
+        write_csv(unused_rows, csv_path, ["group_name", "group_id", "member_count"])
         print(f"\nUnused report written to {csv_path}")
 
 
